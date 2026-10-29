@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hygonstat"
+version = "0.1.0"
+description = "A gpustat-style, read-only monitor for Hygon DCUs"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+dependencies = ["gpustat>=1.1.1,<1.2", "psutil>=5.6"]
+
+[project.urls]
+Repository = "https://github.com/gosgjkaj/hygonstat"
+Issues = "https://github.com/gosgjkaj/hygonstat/issues"
+
+[project.scripts]
+hygonstat = "hygonstat.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["hygonstat*"]

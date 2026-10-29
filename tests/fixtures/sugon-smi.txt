@@ -1,0 +1,133 @@
+
+================================= System Management Interface ==================================
+================================================================================================
+Driver Version: 6.3.32-V1.6.0
+================================================================================================
+================================================================================================
+HCU[0]		: Card Series:		 BW
+HCU[0]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[1]		: Card Series:		 BW
+HCU[1]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[2]		: Card Series:		 BW
+HCU[2]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[3]		: Card Series:		 BW
+HCU[3]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[4]		: Card Series:		 BW
+HCU[4]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[5]		: Card Series:		 BW
+HCU[5]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[6]		: Card Series:		 BW
+HCU[6]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+HCU[7]		: Card Series:		 BW
+HCU[7]		: Card Vendor:		 C-3000 IC Design Co., Ltd.
+================================================================================================
+================================================================================================
+HCU[0]		: PCI Bus: 0000:09:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 1
+HCU[1]		: PCI Bus: 0000:36:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 2
+HCU[2]		: PCI Bus: 0000:55:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 0
+HCU[3]		: PCI Bus: 0000:77:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 3
+HCU[4]		: PCI Bus: 0000:85:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 5
+HCU[5]		: PCI Bus: 0000:b5:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 6
+HCU[6]		: PCI Bus: 0000:d5:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 4
+HCU[7]		: PCI Bus: 0000:f5:00.0 --> SN: EXAMPLE-SERIAL --> OAM ID: 7
+================================================================================================
+================================================================================================
+HCU[0]		: Average Graphics Package Power (W): 89.0
+HCU[0]		: Average GFX Core Power (W): 23.0
+HCU[0]		: Average Memory Power (W): 35.0
+HCU[1]		: Average Graphics Package Power (W): 94.0
+HCU[1]		: Average GFX Core Power (W): 23.0
+HCU[1]		: Average Memory Power (W): 34.0
+HCU[2]		: Average Graphics Package Power (W): 90.0
+HCU[2]		: Average GFX Core Power (W): 23.0
+HCU[2]		: Average Memory Power (W): 36.0
+HCU[3]		: Average Graphics Package Power (W): 107.0
+HCU[3]		: Average GFX Core Power (W): 29.0
+HCU[3]		: Average Memory Power (W): 41.0
+HCU[4]		: Average Graphics Package Power (W): 92.0
+HCU[4]		: Average GFX Core Power (W): 22.0
+HCU[4]		: Average Memory Power (W): 35.0
+HCU[5]		: Average Graphics Package Power (W): 92.0
+HCU[5]		: Average GFX Core Power (W): 23.0
+HCU[5]		: Average Memory Power (W): 35.0
+HCU[6]		: Average Graphics Package Power (W): 93.0
+HCU[6]		: Average GFX Core Power (W): 23.0
+HCU[6]		: Average Memory Power (W): 34.0
+HCU[7]		: Average Graphics Package Power (W): 86.0
+HCU[7]		: Average GFX Core Power (W): 16.0
+HCU[7]		: Average Memory Power (W): 39.0
+================================================================================================
+================================================================================================
+HCU[0]		: Temperature (Sensor edge) (C): 53.0
+HCU[0]		: Temperature (Sensor junction) (C): 55.0
+HCU[0]		: Temperature (Sensor mem) (C): 51.0
+HCU[0]		: Temperature (Sensor core) (C): 51.0
+HCU[1]		: Temperature (Sensor edge) (C): 50.0
+HCU[1]		: Temperature (Sensor junction) (C): 53.0
+HCU[1]		: Temperature (Sensor mem) (C): 50.0
+HCU[1]		: Temperature (Sensor core) (C): 49.0
+HCU[2]		: Temperature (Sensor edge) (C): 52.0
+HCU[2]		: Temperature (Sensor junction) (C): 57.0
+HCU[2]		: Temperature (Sensor mem) (C): 50.0
+HCU[2]		: Temperature (Sensor core) (C): 51.0
+HCU[3]		: Temperature (Sensor edge) (C): 52.0
+HCU[3]		: Temperature (Sensor junction) (C): 54.0
+HCU[3]		: Temperature (Sensor mem) (C): 50.0
+HCU[3]		: Temperature (Sensor core) (C): 50.0
+HCU[4]		: Temperature (Sensor edge) (C): 53.0
+HCU[4]		: Temperature (Sensor junction) (C): 55.0
+HCU[4]		: Temperature (Sensor mem) (C): 50.0
+HCU[4]		: Temperature (Sensor core) (C): 51.0
+HCU[5]		: Temperature (Sensor edge) (C): 54.0
+HCU[5]		: Temperature (Sensor junction) (C): 56.0
+HCU[5]		: Temperature (Sensor mem) (C): 51.0
+HCU[5]		: Temperature (Sensor core) (C): 51.0
+HCU[6]		: Temperature (Sensor edge) (C): 52.0
+HCU[6]		: Temperature (Sensor junction) (C): 54.0
+HCU[6]		: Temperature (Sensor mem) (C): 51.0
+HCU[6]		: Temperature (Sensor core) (C): 50.0
+HCU[7]		: Temperature (Sensor edge) (C): 51.0
+HCU[7]		: Temperature (Sensor junction) (C): 53.0
+HCU[7]		: Temperature (Sensor mem) (C): 50.0
+HCU[7]		: Temperature (Sensor core) (C): 50.0
+================================================================================================
+================================================================================================
+HCU[0]		: HCU use (%): 0.0
+HCU[1]		: HCU use (%): 0.0
+HCU[2]		: HCU use (%): 0.0
+HCU[3]		: HCU use (%): 0.0
+HCU[4]		: HCU use (%): 0.0
+HCU[5]		: HCU use (%): 0.0
+HCU[6]		: HCU use (%): 0.0
+HCU[7]		: HCU use (%): 0.0
+================================================================================================
+================================================================================================
+HCU[0]		: Max Graphics Package Power (W): 1000.0
+HCU[1]		: Max Graphics Package Power (W): 1000.0
+HCU[2]		: Max Graphics Package Power (W): 1000.0
+HCU[3]		: Max Graphics Package Power (W): 1000.0
+HCU[4]		: Max Graphics Package Power (W): 1000.0
+HCU[5]		: Max Graphics Package Power (W): 1000.0
+HCU[6]		: Max Graphics Package Power (W): 1000.0
+HCU[7]		: Max Graphics Package Power (W): 1000.0
+================================================================================================
+================================================================================================
+HCU[0]		: vram Total Memory (MiB): 65520
+HCU[0]		: vram Total Used Memory (MiB): 2
+HCU[1]		: vram Total Memory (MiB): 65520
+HCU[1]		: vram Total Used Memory (MiB): 2
+HCU[2]		: vram Total Memory (MiB): 65520
+HCU[2]		: vram Total Used Memory (MiB): 2
+HCU[3]		: vram Total Memory (MiB): 65520
+HCU[3]		: vram Total Used Memory (MiB): 2
+HCU[4]		: vram Total Memory (MiB): 65520
+HCU[4]		: vram Total Used Memory (MiB): 2
+HCU[5]		: vram Total Memory (MiB): 65520
+HCU[5]		: vram Total Used Memory (MiB): 2
+HCU[6]		: vram Total Memory (MiB): 65520
+HCU[6]		: vram Total Used Memory (MiB): 2
+HCU[7]		: vram Total Memory (MiB): 65520
+HCU[7]		: vram Total Used Memory (MiB): 2
+================================================================================================
+======================================== End of SMI Log ========================================
+
