@@ -43,12 +43,17 @@ watch -n 1 /opt/dtk-26.04/bin/rocm-smi
 克隆后安装到自己的 Python 环境：
 
 ```bash
-git clone git@github.com:gosgjkaj/hygonstat.git
+git clone https://github.com/gosgjkaj/hygonstat.git
 cd hygonstat
 python -m pip install .
 ```
 
-仓库目前为私有，克隆需要相应 GitHub 权限。
+也可直接从 GitHub 安装：
+
+```bash
+python -m pip install git+https://github.com/gosgjkaj/hygonstat.git
+```
+
 仅安装到当前用户时，可使用 `python -m pip install --user .`。
 
 ### 系统安装（所有用户）
