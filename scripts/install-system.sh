@@ -38,7 +38,7 @@ install -d -o root -g root -m 0755 "$release/src"
 tar -C "$source_dir" --exclude='__pycache__' --exclude='*.pyc' \
   --exclude='._*' --exclude='.DS_Store' \
   -cf - pyproject.toml MANIFEST.in README.md LICENSE NOTICE ISSUES.md \
-  hygonstat tests scripts docs .github |
+  hygonstat tests scripts .github |
   tar -C "$release/src" -xf -
 chown -R root:root "$release/src"
 find "$release/src" -type d -exec chmod 0755 {} +

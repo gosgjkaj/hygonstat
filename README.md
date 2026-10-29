@@ -18,13 +18,7 @@
 
 需要 **Linux、Python 3.9 或以上，以及已安装并可用的海光驱动/DTK**。Python 包不会安装 GPU 驱动。
 
-从 PyPI 安装：
-
-```bash
-python -m pip install hygonstat
-```
-
-也可直接从 GitHub 安装开发版本：
+直接从 GitHub 安装：
 
 ```bash
 python -m pip install git+https://github.com/gosgjkaj/hygonstat.git
