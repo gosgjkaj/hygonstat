@@ -9,9 +9,20 @@ description = "A gpustat-style, read-only monitor for Hygon DCUs"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{name = "hygonstat contributors"}]
+keywords = ["hygon", "dcu", "gpu", "monitoring", "gpustat", "cli"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: System :: Monitoring",
+]
 dependencies = ["gpustat>=1.1.1,<1.2", "psutil>=5.6"]
 
 [project.urls]
+Homepage = "https://github.com/gosgjkaj/hygonstat"
 Repository = "https://github.com/gosgjkaj/hygonstat"
 Issues = "https://github.com/gosgjkaj/hygonstat/issues"
 

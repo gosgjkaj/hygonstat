@@ -1,0 +1,13 @@
+hygonstat is based on the command-line experience of gpustat and directly
+reuses gpustat's GPUStat and GPUStatCollection formatting interfaces through
+a runtime dependency. Its Hygon data collector and command entry point are
+implemented separately.
+
+gpustat was created by Jongwook Choi and is developed by its contributors.
+Upstream project: https://github.com/wookayin/gpustat
+Upstream license: MIT
+https://github.com/wookayin/gpustat/blob/v1.1.1/LICENSE
+
+gpustat is distributed separately as a dependency and retains its own
+copyright and license notices. hygonstat is not an official gpustat release
+or a vendor-supported Hygon product.

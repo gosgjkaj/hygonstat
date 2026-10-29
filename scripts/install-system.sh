@@ -37,7 +37,8 @@ install -d -o root -g root -m 0755 "$release/src"
 # Only project files enter the administrator-owned source snapshot.
 tar -C "$source_dir" --exclude='__pycache__' --exclude='*.pyc' \
   --exclude='._*' --exclude='.DS_Store' \
-  -cf - pyproject.toml README.md LICENSE ISSUES.md hygonstat tests scripts |
+  -cf - pyproject.toml MANIFEST.in README.md LICENSE NOTICE ISSUES.md \
+  hygonstat tests scripts docs .github |
   tar -C "$release/src" -xf -
 chown -R root:root "$release/src"
 find "$release/src" -type d -exec chmod 0755 {} +
