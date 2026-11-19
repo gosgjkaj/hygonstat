@@ -1,6 +1,6 @@
 """Hygon DCU monitoring with gpustat's formatter."""
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 
 def new_query(**kwargs):

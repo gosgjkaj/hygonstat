@@ -3,6 +3,7 @@
 from copy import deepcopy
 from io import StringIO
 import os
+import re
 import unittest
 from unittest.mock import patch
 
@@ -35,12 +36,12 @@ def collection():
     return GPUStatCollection(devices, driver_version="test-driver")
 
 
-def render(stats, *, color=False, no_processes=False):
+def render(stats, *, color=False, no_processes=False, show_power="draw,limit"):
     output = StringIO()
     with patch.dict(os.environ, {"TERM": "xterm-256color"}):
         stats.print_formatted(fp=output, force_color=color, no_color=not color,
                               show_header=False, show_user=True, show_cmd=True,
-                              show_pid=True, show_power="draw,limit",
+                              show_pid=True, show_power=show_power,
                               no_processes=no_processes)
     return output.getvalue()
 
@@ -51,7 +52,76 @@ def separator_positions(line, count):
     return tuple(wcswidth(plain[:offset]) for offset in offsets)
 
 
+def metric_layout(line):
+    """Read displayed values, right edges and punctuation, excluding processes."""
+    plain = ANSI.sub("", line)
+    parts = plain.split("|", 3)
+    prefix = len(parts[0]) + 1
+    status = "|".join(parts[1:3])
+    numbers = list(re.finditer(r"\?\?|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?", status))
+    marks = list(re.finditer(r"°C|%|,|/|\bW\b|\bMB\b", status))
+    return (
+        tuple(match.group() for match in numbers),
+        tuple(wcswidth(plain[:prefix + match.end()]) for match in numbers),
+        tuple((match.group(), wcswidth(plain[:prefix + match.start()]))
+              for match in marks),
+    )
+
+
 class FormattingTests(unittest.TestCase):
+    def test_numeric_right_edges_and_units_align_without_reformatting_values(self):
+        stats = collection()
+        stats.gpus[0].entry["power.draw"] = 0
+        stats.gpus[3].entry["enforced.power.limit"] = 10000
+        for field in ("temperature.gpu", "power.draw", "enforced.power.limit",
+                      "memory.used", "memory.total"):
+            stats.gpus[-1].entry[field] = None
+        original_data = deepcopy(stats.jsonify())
+        for color in (False, True):
+            with self.subTest(color=color):
+                before = render(stats, color=color)
+                after = ColumnAligner().align(before)
+                original = [metric_layout(line) for line in before.splitlines()]
+                aligned = [metric_layout(line) for line in after.splitlines()]
+                self.assertEqual([layout[0] for layout in original],
+                                 [layout[0] for layout in aligned])
+                self.assertEqual(len({layout[1] for layout in aligned}), 1)
+                self.assertEqual(len({layout[2] for layout in aligned}), 1)
+                self.assertTrue(all(len(layout[1]) == 6 for layout in aligned))
+                self.assertEqual(before.replace(" ", ""), after.replace(" ", ""))
+        self.assertEqual(stats.jsonify(), original_data)
+
+    def test_numeric_alignment_supports_optional_power_and_process_columns(self):
+        for show_power in (None, "draw", "limit", "draw,limit"):
+            for no_processes in (False, True):
+                with self.subTest(show_power=show_power, no_processes=no_processes):
+                    before = render(collection(), show_power=show_power,
+                                    no_processes=no_processes)
+                    after = ColumnAligner().align(before, no_processes=no_processes)
+                    original = [metric_layout(line) for line in before.splitlines()]
+                    aligned = [metric_layout(line) for line in after.splitlines()]
+                    self.assertEqual([layout[0] for layout in original],
+                                     [layout[0] for layout in aligned])
+                    self.assertEqual(len({layout[1] for layout in aligned}), 1)
+                    self.assertEqual(len({layout[2] for layout in aligned}), 1)
+
+    def test_numeric_columns_do_not_shrink_when_wide_values_disappear(self):
+        wide_gpu = deepcopy(collection().gpus[0])
+        wide_gpu.entry.update({
+            "temperature.gpu": 100.125, "utilization.gpu": 99.99,
+            "power.draw": 1234.567, "enforced.power.limit": 10000,
+            "memory.used": 100000, "memory.total": 131072,
+        })
+        stats = GPUStatCollection([wide_gpu], driver_version="test")
+        aligner = ColumnAligner()
+        wide = aligner.align(render(stats, color=True))
+        narrow_stats = GPUStatCollection([collection().gpus[0]], driver_version="test")
+        narrow = aligner.align(render(narrow_stats, color=True))
+        first_wide = metric_layout(wide.splitlines()[0])
+        first_narrow = metric_layout(narrow.splitlines()[0])
+        self.assertNotEqual(first_narrow[0], first_wide[0])
+        self.assertEqual(first_narrow[1:], first_wide[1:])
+
     def test_fractional_unknown_and_wide_values_align_without_changing_data(self):
         stats = collection()
         original_data = deepcopy(stats.jsonify())
