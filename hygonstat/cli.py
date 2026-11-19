@@ -1,8 +1,11 @@
 """Small CLI using gpustat for terminal formatting only."""
 
 import argparse
+from contextlib import redirect_stdout
+from io import StringIO
 import json
 import math
+import os
 import sys
 import time
 
@@ -55,6 +58,17 @@ def parser():
     return p
 
 
+def _same_terminal(first, second):
+    """Keep on-screen warnings in the frame, but preserve redirected stderr."""
+    if not (first.isatty() and second.isatty()):
+        return False
+    try:
+        left, right = os.fstat(first.fileno()), os.fstat(second.fileno())
+    except (OSError, ValueError):
+        return False
+    return (left.st_dev, left.st_ino) == (right.st_dev, right.st_ino)
+
+
 def main(argv=None):
     args = parser().parse_args(argv)
     previous_warnings = None
@@ -71,21 +85,38 @@ def main(argv=None):
                                  indent=None if args.interval else 2, allow_nan=False), flush=True)
             else:
                 redraw = bool(args.interval and sys.stdout.isatty())
-                if redraw:
-                    sys.stdout.write("\033[H\033[2J")
-                stats.print_formatted(
-                    fp=sys.stdout, force_color=args.color, no_color=args.no_color,
+                frame = StringIO() if redraw else sys.stdout
+                format_options = dict(
+                    fp=frame,
+                    force_color=args.color or (redraw and not args.no_color),
+                    no_color=args.no_color,
                     show_user=args.show_user or args.show_all,
                     show_cmd=args.show_cmd or args.show_all,
                     show_pid=args.show_pid or args.show_all,
                     show_power="draw,limit" if args.show_all else args.show_power,
                     show_header=not args.no_header, no_processes=args.no_processes,
                 )
+                if redraw:
+                    # Build the whole frame before touching the terminal. Clear
+                    # only stale line tails/rows, never blank the screen first.
+                    with redirect_stdout(frame):
+                        stats.print_formatted(**format_options)
+                    inline_warnings = _same_terminal(sys.stdout, sys.stderr)
+                    if inline_warnings:
+                        for warning in stats.warnings:
+                            frame.write("hygonstat: " + warning + "\n")
+                    # Also cover gpustat's empty-device message, which uses
+                    # print() rather than its fp/eol_char arguments.
+                    content = frame.getvalue().replace("\n", "\033[K\n")
+                    sys.stdout.write("\033[H" + content + "\033[J")
+                else:
+                    stats.print_formatted(**format_options)
+                    inline_warnings = False
                 sys.stdout.flush()
-                if redraw or stats.warnings != previous_warnings:
+                if not inline_warnings and stats.warnings != previous_warnings:
                     for warning in stats.warnings:
                         print("hygonstat: " + warning, file=sys.stderr)
-                    previous_warnings = stats.warnings
+                previous_warnings = stats.warnings
             if args.interval is None:
                 return 0
             time.sleep(max(0, args.interval - (time.monotonic() - started)))

@@ -11,7 +11,27 @@ from hygonstat import cli
 from hygonstat.backend import QueryError
 
 
-def snapshot(warnings=None):
+class RecordingTerminal(StringIO):
+    """Record externally visible writes, including partial redraws."""
+
+    def __init__(self):
+        super().__init__()
+        self.writes = []
+        self.flushes = 0
+
+    def isatty(self):
+        return True
+
+    def write(self, value):
+        self.writes.append(value)
+        return super().write(value)
+
+    def flush(self):
+        self.flushes += 1
+        return super().flush()
+
+
+def snapshot(warnings=None, lines=None):
     stats = Mock()
     stats.smi_path = "/opt/dtk/bin/rocm-smi"
     stats.warnings = list(warnings or [])
@@ -19,7 +39,12 @@ def snapshot(warnings=None):
         "hostname": "sugon", "query_time": datetime(2026, 10, 29, 12, 30),
         "gpus": [{"index": 2, "memory.used": None, "utilization.gpu": 0}],
     }
-    stats.print_formatted.side_effect = lambda **kw: kw["fp"].write("GPU snapshot\n")
+    def format_snapshot(**kw):
+        for line in lines if lines is not None else ["GPU snapshot"]:
+            kw["fp"].write(line)
+            kw["fp"].write(kw.get("eol_char", "\n"))
+
+    stats.print_formatted.side_effect = format_snapshot
     return stats
 
 
@@ -91,16 +116,118 @@ class CLITests(unittest.TestCase):
         self.assertFalse(kwargs["show_header"])
         self.assertEqual(kwargs["show_power"], "draw,limit")
 
-    def test_terminal_redraw_keeps_persistent_warnings_visible(self):
-        stdout, stderr = StringIO(), StringIO()
+    def test_terminal_redraw_writes_complete_frames_and_clears_stale_text(self):
+        stdout, stderr = RecordingTerminal(), StringIO()
         with patch.object(cli, "new_query", side_effect=[
-                snapshot(["limited"]), snapshot(["limited"]), KeyboardInterrupt]), \
+                snapshot(lines=["GPU long description", "process 123"]),
+                snapshot(lines=["GPU"]), KeyboardInterrupt]), \
                 patch.object(cli.time, "sleep"), \
-                patch.object(stdout, "isatty", return_value=True), \
+                redirect_stdout(stdout), redirect_stderr(stderr):
+            self.assertEqual(cli.main(["-i", "--no-color"]), 130)
+        self.assertEqual(len(stdout.writes), 2)
+        self.assertEqual(stdout.flushes, 2)
+        self.assertNotIn("\033[2J", stdout.getvalue())
+        for frame in stdout.writes:
+            self.assertTrue(frame.startswith("\033[H"))
+            self.assertTrue(frame.endswith("\033[J"))
+        # A shorter GPU line must erase the old tail, and the removed process
+        # row must be cleared after the new frame has been drawn.
+        self.assertIn("GPU\033[K\n\033[J", stdout.writes[1])
+        self.assertNotIn("process 123", stdout.writes[1])
+
+    def test_terminal_redraw_keeps_warnings_visible_until_they_disappear(self):
+        stdout, stderr = RecordingTerminal(), StringIO()
+        with patch.object(cli, "new_query", side_effect=[
+                snapshot(["limited"]), snapshot(["limited"]),
+                snapshot(), KeyboardInterrupt]), \
+                patch.object(cli.time, "sleep"), \
+                patch.object(cli, "_same_terminal", return_value=True), \
                 redirect_stdout(stdout), redirect_stderr(stderr):
             self.assertEqual(cli.main(["-i"]), 130)
-        self.assertEqual(stdout.getvalue().count("\033[H\033[2J"), 2)
-        self.assertEqual(stderr.getvalue().count("hygonstat: limited"), 2)
+        self.assertEqual(len(stdout.writes), 3)
+        for frame in stdout.writes[:2]:
+            self.assertIn("hygonstat: limited\033[K\n", frame)
+        self.assertNotIn("hygonstat: limited", stdout.writes[2])
+        self.assertTrue(stdout.writes[2].endswith("\033[J"))
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_terminal_redraw_deduplicates_redirected_stderr(self):
+        stdout, stderr = RecordingTerminal(), StringIO()
+        with patch.object(cli, "new_query", side_effect=[
+                snapshot(["limited"]), snapshot(["limited"]),
+                snapshot(["unavailable"]), KeyboardInterrupt]), \
+                patch.object(cli.time, "sleep"), \
+                redirect_stdout(stdout), redirect_stderr(stderr):
+            self.assertEqual(cli.main(["-i"]), 130)
+        self.assertNotIn("hygonstat:", stdout.getvalue())
+        self.assertEqual(stderr.getvalue().splitlines(),
+                         ["hygonstat: limited", "hygonstat: unavailable"])
+        self.assertNotIn("\033", stderr.getvalue())
+
+    def test_buffered_terminal_output_preserves_color_options(self):
+        for arguments, force_color, no_color in (
+                (["-i"], True, False),
+                (["-i", "--color"], True, False),
+                (["-i", "--no-color"], False, True)):
+            with self.subTest(arguments=arguments):
+                stats = snapshot()
+                with patch.object(cli, "new_query", side_effect=[stats, KeyboardInterrupt]), \
+                        patch.object(cli.time, "sleep"), \
+                        redirect_stdout(RecordingTerminal()), redirect_stderr(StringIO()):
+                    self.assertEqual(cli.main(arguments), 130)
+                options = stats.print_formatted.call_args.kwargs
+                self.assertEqual(options["force_color"], force_color)
+                self.assertEqual(options["no_color"], no_color)
+
+    def test_formatter_stdout_fallback_is_also_buffered(self):
+        stats = snapshot()
+        # gpustat's empty-device path prints directly to sys.stdout.
+        stats.print_formatted.side_effect = lambda **kw: print("No GPUs found")
+        stdout = RecordingTerminal()
+        with patch.object(cli, "new_query", side_effect=[stats, KeyboardInterrupt]), \
+                patch.object(cli.time, "sleep"), \
+                redirect_stdout(stdout), redirect_stderr(StringIO()):
+            self.assertEqual(cli.main(["-i"]), 130)
+        self.assertEqual(len(stdout.writes), 1)
+        self.assertIn("No GPUs found\033[K\n", stdout.writes[0])
+        self.assertTrue(stdout.writes[0].startswith("\033[H"))
+
+    def test_terminal_query_failure_does_not_erase_existing_display(self):
+        stdout, stderr = RecordingTerminal(), StringIO()
+        with patch.object(cli, "new_query", side_effect=QueryError("SMI timed out")), \
+                redirect_stdout(stdout), redirect_stderr(stderr):
+            self.assertEqual(cli.main(["-i"]), 1)
+        self.assertEqual(stdout.writes, [])
+        self.assertEqual(stderr.getvalue(), "hygonstat: SMI timed out\n")
+
+    def test_terminal_formatting_failure_does_not_write_a_partial_frame(self):
+        stats = snapshot()
+
+        def failing_formatter(**kw):
+            kw["fp"].write("incomplete GPU row")
+            raise RuntimeError("formatting failed")
+
+        stats.print_formatted.side_effect = failing_formatter
+        stdout = RecordingTerminal()
+        with patch.object(cli, "new_query", return_value=stats), \
+                redirect_stdout(stdout), redirect_stderr(StringIO()):
+            with self.assertRaisesRegex(RuntimeError, "formatting failed"):
+                cli.main(["-i"])
+        self.assertEqual(stdout.writes, [])
+
+    def test_same_terminal_checks_device_identity_and_redirected_streams(self):
+        first, second = Mock(), Mock()
+        first.isatty.return_value = second.isatty.return_value = True
+        for identity, expected in (((1, 10), True), ((1, 11), False), ((2, 10), False)):
+            with self.subTest(identity=identity), \
+                    patch.object(cli.os, "fstat", side_effect=[
+                        Mock(st_dev=1, st_ino=10),
+                        Mock(st_dev=identity[0], st_ino=identity[1])]):
+                self.assertEqual(cli._same_terminal(first, second), expected)
+        second.isatty.return_value = False
+        with patch.object(cli.os, "fstat") as fstat:
+            self.assertFalse(cli._same_terminal(first, second))
+            fstat.assert_not_called()
 
     def test_query_failure_has_nonzero_exit_and_no_success_payload(self):
         stdout, stderr = StringIO(), StringIO()
