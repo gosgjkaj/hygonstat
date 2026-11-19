@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hygonstat"
-version = "0.1.1"
+version = "0.1.2"
 description = "A gpustat-style, read-only monitor for Hygon DCUs"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: System :: Monitoring",
 ]
-dependencies = ["gpustat>=1.1.1,<1.2", "psutil>=5.6"]
+dependencies = ["gpustat>=1.1.1,<1.2", "psutil>=5.6", "wcwidth>=0.2.13"]
 
 [project.urls]
 Homepage = "https://github.com/gosgjkaj/hygonstat"

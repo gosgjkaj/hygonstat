@@ -11,6 +11,7 @@ import time
 
 from . import __version__
 from .backend import QueryError, new_query
+from .formatting import ColumnAligner
 
 
 def positive_float(value):
@@ -72,6 +73,7 @@ def _same_terminal(first, second):
 def main(argv=None):
     args = parser().parse_args(argv)
     previous_warnings = None
+    aligner = ColumnAligner()
     try:
         while True:
             started = time.monotonic()
@@ -85,10 +87,10 @@ def main(argv=None):
                                  indent=None if args.interval else 2, allow_nan=False), flush=True)
             else:
                 redraw = bool(args.interval and sys.stdout.isatty())
-                frame = StringIO() if redraw else sys.stdout
+                frame = StringIO()
                 format_options = dict(
                     fp=frame,
-                    force_color=args.color or (redraw and not args.no_color),
+                    force_color=args.color or (sys.stdout.isatty() and not args.no_color),
                     no_color=args.no_color,
                     show_user=args.show_user or args.show_all,
                     show_cmd=args.show_cmd or args.show_all,
@@ -96,21 +98,22 @@ def main(argv=None):
                     show_power="draw,limit" if args.show_all else args.show_power,
                     show_header=not args.no_header, no_processes=args.no_processes,
                 )
+                # Capture the upstream formatter before aligning visible columns;
+                # this also catches its direct print() for an empty device list.
+                with redirect_stdout(frame):
+                    stats.print_formatted(**format_options)
+                content = aligner.align(frame.getvalue(), no_processes=args.no_processes)
                 if redraw:
                     # Build the whole frame before touching the terminal. Clear
                     # only stale line tails/rows, never blank the screen first.
-                    with redirect_stdout(frame):
-                        stats.print_formatted(**format_options)
                     inline_warnings = _same_terminal(sys.stdout, sys.stderr)
                     if inline_warnings:
                         for warning in stats.warnings:
-                            frame.write("hygonstat: " + warning + "\n")
-                    # Also cover gpustat's empty-device message, which uses
-                    # print() rather than its fp/eol_char arguments.
-                    content = frame.getvalue().replace("\n", "\033[K\n")
+                            content += "hygonstat: " + warning + "\n"
+                    content = content.replace("\n", "\033[K\n")
                     sys.stdout.write("\033[H" + content + "\033[J")
                 else:
-                    stats.print_formatted(**format_options)
+                    sys.stdout.write(content)
                     inline_warnings = False
                 sys.stdout.flush()
                 if not inline_warnings and stats.warnings != previous_warnings:
